@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UPIK Dashboard — Jabatan Pengajian Am, PSIS</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; font-size: 13px; background: #eef1f7; color: #1f2328; }
+
+  /* ===== LOGIN ===== */
+  #login-screen {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #0f2557 0%, #1a3a6e 50%, #0d5c8a 100%);
+  }
+  .login-bg-circles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .login-bg-circles span {
+    position: absolute; border-radius: 50%; opacity: 0.08; background: #fff;
+  }
+  .login-bg-circles span:nth-child(1) { width: 400px; height: 400px; top: -100px; left: -100px; }
+  .login-bg-circles span:nth-child(2) { width: 300px; height: 300px; bottom: -80px; right: -80px; }
+  .login-bg-circles span:nth-child(3) { width: 180px; height: 180px; top: 40%; right: 15%; }
+
+  .login-box {
+    position: relative; z-index: 1;
+    background: #fff; border-radius: 16px;
+    padding: 44px 40px 36px; width: 100%; max-width: 400px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+  }
+  .login-header { text-align: center; margin-bottom: 32px; }
+  .login-emblem {
+    width: 68px; height: 68px; background: linear-gradient(135deg, #1a3a6e, #0d5c8a);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px; font-size: 28px;
+  }
+  .login-header h2 { font-size: 20px; font-weight: 700; color: #1a3a6e; margin-bottom: 2px; }
+  .login-header .inst { font-size: 12px; color: #57606a; }
+  .login-divider { height: 1px; background: #e5e7eb; margin-bottom: 24px; }
+  .login-field { margin-bottom: 16px; }
+  .login-field label { display: block; font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .input-wrap { position: relative; }
+  .input-wrap span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; }
+  .login-field input {
+    width: 100%; padding: 11px 12px 11px 36px;
+    border: 1.5px solid #e5e7eb; border-radius: 8px;
+    font-size: 13px; outline: none; transition: border 0.2s;
+    background: #f9fafb;
+  }
+  .login-field input:focus { border-color: #1a3a6e; background: #fff; }
+  .login-btn {
+    width: 100%; padding: 13px;
+    background: linear-gradient(135deg, #1a3a6e, #0d5c8a);
+    color: #fff; border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    margin-top: 8px; letter-spacing: 0.3px;
+  }
+  .login-btn:hover { opacity: 0.92; }
+  .login-error {
+    color: #c0392b; font-size: 12px; margin-top: 12px;
+    display: none; background: #fef2f2; border: 1px solid #fecaca;
+    border-radius: 6px; padding: 8px 12px; text-align: center;
+  }
+  .login-footer { font-size: 11px; color: #9ca3af; margin-top: 20px; text-align: center; }
+  .login-badge {
+    display: inline-block; background: #fef9c3; color: #854d0e;
+    font-size: 10px; font-weight: 700; padding: 2px 10px;
+    border-radius: 20px; margin-bottom: 14px; letter-spacing: 0.3px;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    position: fixed; top: 0; left: 0; width: 230px; height: 100vh;
+    background: linear-gradient(180deg, #0f2557 0%, #1a3a6e 100%);
+    display: flex; flex-direction: column; z-index: 100;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.15);
+  }
+  .sidebar-logo { padding: 22px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .sidebar-logo-top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .sidebar-icon { width: 36px; height: 36px; background: rgba(200,169,45,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .sidebar-logo h2 { color: #c8a92d; font-size: 13px; font-weight: 700; line-height: 1.3; }
+  .sidebar-logo p { color: #7a9cc4; font-size: 10px; margin-top: 2px; }
+  .nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .nav-label { padding: 10px 20px 4px; font-size: 9px; color: #4a6a9a; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+  .nav-divider { border-top: 1px solid rgba(255,255,255,0.06); margin: 8px 12px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 20px; color: #8baad4; font-size: 12px;
+    cursor: pointer; border-left: 3px solid transparent;
+    border-radius: 0; transition: all 0.15s;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .nav-item.active { background: rgba(200,169,45,0.12); color: #c8a92d; border-left-color: #c8a92d; font-weight: 600; }
+  .nav-item .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+  .sidebar-user { padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .sidebar-user-info { display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 32px; height: 32px; background: rgba(200,169,45,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .user-name { font-size: 12px; color: #c8a92d; font-weight: 600; }
+  .user-role { font-size: 10px; color: #5a7aaa; }
+  .logout-btn { font-size: 10px; color: #5a7aaa; cursor: pointer; margin-top: 6px; text-decoration: underline; display: inline-block; }
+  .logout-btn:hover { color: #c8a92d; }
+
+  /* ===== MAIN ===== */
+  .main { margin-left: 230px; min-height: 100vh; }
+  .topbar {
+    background: #fff; padding: 14px 28px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-left h1 { font-size: 16px; font-weight: 700; color: #1a3a6e; }
+  .topbar-crumb { font-size: 11px; color: #9ca3af; }
+  .updated { font-size: 11px; color: #57606a; background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 20px; padding: 4px 12px; }
+  .content { padding: 24px 28px; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+  .section-sub { font-size: 12px; color: #57606a; margin-bottom: 20px; line-height: 1.6; }
+
+  /* ===== KPI CARDS ===== */
+  .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi-card {
+    background: #fff; border-radius: 12px; padding: 20px 22px;
+    border: 1px solid #e5e7eb; position: relative; overflow: hidden;
+  }
+  .kpi-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: #1a3a6e; border-radius: 12px 12px 0 0;
+  }
+  .kpi-card.gold::before { background: linear-gradient(90deg, #c8a92d, #e8c94d); }
+  .kpi-card.teal::before { background: #0d7377; }
+  .kpi-card.purple::before { background: #7c5cd8; }
+  .kpi-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .kpi-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; background: #eef2ff; }
+  .kpi-card.gold .kpi-icon { background: #fef9c3; }
+  .kpi-card.teal .kpi-icon { background: #ccfbf1; }
+  .kpi-card.purple .kpi-icon { background: #ede9fe; }
+  .kpi-card .label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .kpi-card .value { font-size: 34px; font-weight: 800; color: #1a3a6e; line-height: 1; }
+  .kpi-card.gold .value { color: #c8a92d; }
+  .kpi-card.teal .value { color: #0d7377; }
+  .kpi-card.purple .value { color: #7c5cd8; }
+  .kpi-card .sub { font-size: 11px; color: #9ca3af; margin-top: 6px; }
+
+  /* ===== CHARTS ===== */
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .chart-card { background: #fff; border-radius: 12px; padding: 20px 22px; border: 1px solid #e5e7eb; }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-card h3 { font-size: 13px; font-weight: 700; color: #1a3a6e; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+
+  .bar-chart { display: flex; flex-direction: column; gap: 8px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; }
+  .bar-label { width: 150px; font-size: 11px; color: #6b7280; text-align: right; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-wrap { flex: 1; background: #f3f4f6; border-radius: 6px; height: 22px; overflow: hidden; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, #1a3a6e, #2a5298); border-radius: 6px; display: flex; align-items: center; padding-left: 8px; color: #fff; font-size: 10px; font-weight: 700; min-width: 24px; }
+  .bar-fill.gold { background: linear-gradient(90deg, #c8a92d, #e8c94d); }
+  .bar-fill.teal { background: linear-gradient(90deg, #0d7377, #14b8a6); }
+  .bar-fill.purple { background: linear-gradient(90deg, #7c5cd8, #a78bfa); }
+  .bar-fill.red { background: linear-gradient(90deg, #c0392b, #ef4444); }
+
+  /* ===== TABLES ===== */
+  .table-wrap { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 24px; }
+  .table-header { padding: 16px 20px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; background: #fafbfc; }
+  .table-header h3 { font-size: 13px; font-weight: 700; color: #1a3a6e; }
+  .table-count { font-size: 11px; color: #fff; background: #1a3a6e; border-radius: 20px; padding: 2px 10px; font-weight: 600; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  th { background: #f8f9fb; padding: 10px 14px; text-align: left; font-weight: 700; color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8faff; }
+
+  /* ===== BADGES ===== */
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+  .b-emas { background: #fef9c3; color: #854d0e; }
+  .b-perak { background: #f1f5f9; color: #475569; }
+  .b-gangsa { background: #fef3c7; color: #92400e; }
+  .b-pertama { background: #dcfce7; color: #166534; }
+  .b-kedua { background: #dbeafe; color: #1e40af; }
+  .b-ketiga { background: #ede9fe; color: #5b21b6; }
+  .b-antarabangsa { background: #dbeafe; color: #1e40af; }
+  .b-kebangsaan { background: #dcfce7; color: #166534; }
+  .b-politeknik { background: #ede9fe; color: #5b21b6; }
+  .b-jabatan { background: #f0f2f5; color: #57606a; }
+  .b-penulis { background: #e0f2fe; color: #0369a1; }
+  .b-award { background: #fef9c3; color: #854d0e; }
+  .b-proj-pensyarah { background: #dbeafe; color: #1e40af; }
+  .b-proj-pelajar { background: #dcfce7; color: #166534; }
+
+  /* ===== BORANG ===== */
+  .borang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .borang-card {
+    background: #fff; border-radius: 12px; border: 1px solid #e5e7eb;
+    padding: 32px 28px; text-align: center; position: relative; overflow: hidden;
+  }
+  .borang-card::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+  }
+  .borang-card:first-child::after { background: linear-gradient(90deg, #1a3a6e, #2a5298); }
+  .borang-card:last-child::after { background: linear-gradient(90deg, #c8a92d, #e8c94d); }
+  .borang-card .borang-icon { font-size: 44px; margin-bottom: 14px; }
+  .borang-card h3 { font-size: 16px; font-weight: 700; color: #1a3a6e; margin-bottom: 8px; }
+  .borang-card p { font-size: 12px; color: #6b7280; margin-bottom: 20px; line-height: 1.6; }
+  .btn { display: inline-block; padding: 11px 26px; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; cursor: pointer; border: none; letter-spacing: 0.2px; }
+  .btn-primary { background: linear-gradient(135deg, #1a3a6e, #2a5298); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-gold { background: linear-gradient(135deg, #c8a92d, #e8c94d); color: #fff; }
+  .btn-gold:hover { opacity: 0.9; }
+  .borang-note { font-size: 12px; color: #6b7280; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 12px 16px; line-height: 1.6; }
+  .borang-note strong { color: #0369a1; }
+
+  /* ===== FORMS ===== */
+  .form-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .form-tab { padding: 10px 22px; border: 2px solid #e5e7eb; border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; color: #6b7280; cursor: pointer; }
+  .form-tab.active { background: #1a3a6e; color: #fff; border-color: #1a3a6e; }
+  .form-tab:last-child.active { background: #c8a92d; border-color: #c8a92d; }
+
+  .form-panel { display: none; }
+  .form-panel.active { display: block; }
+
+  .form-wrap { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; }
+  .form-header { background: #f8f9fb; padding: 16px 24px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; }
+  .form-header h3 { font-size: 14px; font-weight: 700; color: #1a3a6e; }
+  .form-header span { font-size: 11px; color: #9ca3af; }
+  .form-body { padding: 24px; }
+
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label { font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 10px 12px; border: 1.5px solid #e5e7eb; border-radius: 8px;
+    font-size: 13px; outline: none; font-family: inherit; background: #f9fafb;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #1a3a6e; background: #fff; }
+  .form-group textarea { resize: vertical; }
+  .form-group { margin-bottom: 16px; }
+
+  .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
+  .btn-reset { padding: 10px 20px; border: 1.5px solid #e5e7eb; border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; color: #6b7280; cursor: pointer; }
+  .btn-reset:hover { background: #f3f4f6; }
+  .btn-submit { padding: 10px 24px; border: none; border-radius: 8px; background: linear-gradient(135deg, #1a3a6e, #2a5298); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-submit:hover { opacity: 0.9; }
+  .btn-submit-gold { background: linear-gradient(135deg, #c8a92d, #e8c94d); }
+
+  .form-success { display: none; background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 48px 24px; text-align: center; margin-top: 16px; }
+  .form-success-icon { font-size: 48px; margin-bottom: 16px; }
+  .form-success h3 { font-size: 18px; font-weight: 700; color: #166534; margin-bottom: 8px; }
+  .form-success p { font-size: 13px; color: #57606a; }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen">
+  <div class="login-bg-circles"><span></span><span></span><span></span></div>
+  <div class="login-box">
+    <div class="login-header">
+      <div class="login-emblem">🏛️</div>
+      <div class="login-badge">SISTEM MAKLUMAT UPIK</div>
+      <h2>UPIK Dashboard</h2>
+      <div class="inst">Jabatan Pengajian Am &nbsp;·&nbsp; Politeknik Sultan Idris Shah</div>
+    </div>
+    <div class="login-divider"></div>
+    <div class="login-field">
+      <label>Nama Pengguna</label>
+      <div class="input-wrap">
+        <span>👤</span>
+        <input type="text" id="login-user" placeholder="Masukkan nama pengguna" autocomplete="off" />
+      </div>
+    </div>
+    <div class="login-field">
+      <label>Kata Laluan</label>
+      <div class="input-wrap">
+        <span>🔒</span>
+        <input type="password" id="login-pass" placeholder="Masukkan kata laluan" onkeydown="if(event.key==='Enter') doLogin()" />
+      </div>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Log Masuk →</button>
+    <div class="login-error" id="login-error">❌ Nama pengguna atau kata laluan salah. Sila cuba semula.</div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button onclick="quickLogin('admin','upikjpa2026')" style="flex:1;padding:9px;border:1.5px solid #1a3a6e;border-radius:8px;background:#fff;color:#1a3a6e;font-size:12px;font-weight:700;cursor:pointer;">⚙️ Admin</button>
+      <button onclick="quickLogin('pensyarah','psis2026')" style="flex:1;padding:9px;border:1.5px solid #c8a92d;border-radius:8px;background:#fff;color:#c8a92d;font-size:12px;font-weight:700;cursor:pointer;">👨‍🏫 Pensyarah</button>
+    </div>
+    <div class="login-footer">Hubungi Penyelaras UPIK sekiranya lupa kata laluan</div>
+  </div>
+</div>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-top">
+      <div class="sidebar-icon">🏛️</div>
+      <div>
+        <h2>UPIK Dashboard</h2>
+        <p>Jabatan Pengajian Am, PSIS</p>
+      </div>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="nav-label">Dashboard</div>
+    <div class="nav-item active" onclick="showPage('overview',this)"><span class="nav-icon">📊</span> Overview</div>
+    <div class="nav-item" onclick="showPage('penyelidikan',this)"><span class="nav-icon">🔬</span> Penyelidikan</div>
+    <div class="nav-item" onclick="showPage('inovasi',this)"><span class="nav-icon">💡</span> Inovasi</div>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Pengurusan Data</div>
+    <div class="nav-item" onclick="showPage('borang',this)"><span class="nav-icon">📝</span> Hantar Data</div>
+  </div>
+  <div class="sidebar-user">
+    <div class="sidebar-user-info">
+      <div class="user-avatar">👤</div>
+      <div>
+        <div class="user-name" id="sidebar-username">—</div>
+        <div class="user-role" id="sidebar-role">—</div>
+      </div>
+    </div>
+    <div class="logout-btn" onclick="doLogout()">Log Keluar</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 id="page-title">Overview</h1>
+    </div>
+    <span class="updated">📅 &nbsp;Data: PSIS — Jabatan Pengajian Am &nbsp;|&nbsp; 2024–2026</span>
+  </div>
+
+  <div class="content">
+
+    <!-- ===== OVERVIEW ===== -->
+    <div class="page active" id="page-overview">
+      <p class="section-sub">Ringkasan keseluruhan aktiviti Unit Penyelidikan, Inovasi &amp; Komersialan (UPIK) — Jabatan Pengajian Am, Politeknik Sultan Idris Shah</p>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-card-top"><div><div class="label">Jumlah Penyelidikan</div><div class="value">17</div></div><div class="kpi-icon">🔬</div></div>
+          <div class="sub">Kajian &amp; penerbitan</div>
+        </div>
+        <div class="kpi-card gold">
+          <div class="kpi-card-top"><div><div class="label">Jumlah Inovasi</div><div class="value">4</div></div><div class="kpi-icon">💡</div></div>
+          <div class="sub">Projek inovasi berdaftar</div>
+        </div>
+        <div class="kpi-card teal">
+          <div class="kpi-card-top"><div><div class="label">Pencapaian / Anugerah</div><div class="value">6</div></div><div class="kpi-icon">🏆</div></div>
+          <div class="sub">Gold, Silver, Best Paper &amp; lain-lain</div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="kpi-card-top"><div><div class="label">Peringkat Antarabangsa</div><div class="value">13</div></div><div class="kpi-icon">🌏</div></div>
+          <div class="sub">Penyelidikan &amp; inovasi</div>
+        </div>
+        <div class="kpi-card gold">
+          <div class="kpi-card-top"><div><div class="label">Projek Pensyarah</div><div class="value">15</div></div><div class="kpi-icon">👨‍🏫</div></div>
+          <div class="sub">Daripada 17 rekod penyelidikan</div>
+        </div>
+        <div class="kpi-card teal">
+          <div class="kpi-card-top"><div><div class="label">Bidang Utama</div><div class="value" style="font-size:22px">Education</div></div><div class="kpi-icon">📚</div></div>
+          <div class="sub">Dominan dalam kedua-dua sheet</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3>Penyelidikan — Peringkat</h3>
+          <div class="bar-chart">
+            <div class="bar-row"><span class="bar-label">Antarabangsa</span><div class="bar-wrap"><div class="bar-fill" style="width:82%">14</div></div></div>
+            <div class="bar-row"><span class="bar-label">Politeknik</span><div class="bar-wrap"><div class="bar-fill teal" style="width:18%">3</div></div></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Inovasi — Pencapaian</h3>
+          <div class="bar-chart">
+            <div class="bar-row"><span class="bar-label">Emas</span><div class="bar-wrap"><div class="bar-fill gold" style="width:25%">1</div></div></div>
+            <div class="bar-row"><span class="bar-label">Perak</span><div class="bar-wrap"><div class="bar-fill" style="width:25%">1</div></div></div>
+            <div class="bar-row"><span class="bar-label">Tempat Pertama</span><div class="bar-wrap"><div class="bar-fill teal" style="width:25%">1</div></div></div>
+            <div class="bar-row"><span class="bar-label">Perak (belum)</span><div class="bar-wrap"><div class="bar-fill" style="width:25%">1</div></div></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Penyelidikan — Kategori</h3>
+          <div class="bar-chart">
+            <div class="bar-row"><span class="bar-label">Projek Pensyarah</span><div class="bar-wrap"><div class="bar-fill" style="width:88%">15</div></div></div>
+            <div class="bar-row"><span class="bar-label">Projek Pelajar</span><div class="bar-wrap"><div class="bar-fill gold" style="width:12%">2</div></div></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Penyelidikan — Bidang</h3>
+          <div class="bar-chart">
+            <div class="bar-row"><span class="bar-label">Education</span><div class="bar-wrap"><div class="bar-fill" style="width:88%">15</div></div></div>
+            <div class="bar-row"><span class="bar-label">Social Sciences</span><div class="bar-wrap"><div class="bar-fill gold" style="width:18%">2</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PENYELIDIKAN ===== -->
+    <div class="page" id="page-penyelidikan">
+      <p class="section-sub">Rekod kajian, penerbitan dan pembentangan di persidangan/seminar oleh pensyarah Jabatan Pengajian Am, PSIS</p>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="label">Jumlah Rekod</div>
+          <div class="value">17</div>
+        </div>
+        <div class="kpi-card gold">
+          <div class="label">Peringkat Antarabangsa</div>
+          <div class="value">14</div>
+        </div>
+        <div class="kpi-card teal">
+          <div class="label">Peringkat Politeknik</div>
+          <div class="value">3</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3>Mengikut Peringkat</h3>
+          <div class="bar-chart">
+            <div class="bar-row"><span class="bar-label">Antarabangsa</span><div class="bar-wrap"><div class="bar-fill" style="width:82%">14</div></div></div>
+            <div class="bar-row"><span class="bar-label">Politeknik</span><div class="bar-wrap"><div class="bar-fill teal" style="width:18%">3</div></div></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Mengikut Kategori</h3>
+          <div class="bar-chart">
+            <div class="bar-row"><span class="bar-label">Projek Pensyarah</span><div class="bar-wrap"><div class="bar-fill" style="width:88%">15</div></div></div>
+            <div class="bar-row"><span class="bar-label">Projek Pelajar</span><div class="bar-wrap"><div class="bar-fill gold" style="width:12%">2</div></div></div>
+          </div>
+        </div>
+        <div class="chart-card full">
+          <h3>Mengikut Pensyarah (Penyelidik Utama)</h3>
+          <div class="bar-chart">
+            <div class="bar-row"><span class="bar-label">Nur Hidayati Binti Sanusi</span><div class="bar-wrap"><div class="bar-fill" style="width:65%">7</div></div></div>
+            <div class="bar-row"><span class="bar-label">Mohd Farid Bin Dawam</span><div class="bar-wrap"><div class="bar-fill gold" style="width:28%">3</div></div></div>
+            <div class="bar-row"><span class="bar-label">Radika Subramaniam</span><div class="bar-wrap"><div class="bar-fill teal" style="width:19%">2</div></div></div>
+            <div class="bar-row"><span class="bar-label">Noorarizawaty Binti Aris</span><div class="bar-wrap"><div class="bar-fill purple" style="width:9%">1</div></div></div>
+            <div class="bar-row"><span class="bar-label">Durgai Ravindaran</span><div class="bar-wrap"><div class="bar-fill" style="width:9%">1</div></div></div>
+            <div class="bar-row"><span class="bar-label">Maryam Bte Badrul Munir</span><div class="bar-wrap"><div class="bar-fill gold" style="width:9%">1</div></div></div>
+            <div class="bar-row"><span class="bar-label">Mohd Fadzu Bin Zulkeflee</span><div class="bar-wrap"><div class="bar-fill teal" style="width:19%">2</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Senarai Penyelidikan &amp; Penerbitan</h3>
+          <span style="font-size:11px;color:#57606a">17 rekod</span>
+        </div>
+        <div class="table-scroll">
+        <table>
+          <tr>
+            <th>Bil</th>
+            <th style="min-width:260px">Tajuk Kajian / Penyelidikan</th>
+            <th style="min-width:180px">Nama Penyelidik</th>
+            <th style="min-width:220px">Nama Persidangan / Seminar</th>
+            <th>Tarikh</th>
+            <th>Pencapaian</th>
+            <th>Peringkat</th>
+            <th>Kategori</th>
+            <th>Bidang</th>
+          </tr>
+          <tr><td>CTH</td><td>A Study on Learner's Satisfaction Towards Informal Academic Learning Space in Higher Education Institutions</td><td>Ramu Velusamy; Naeemah Yusof; Mazarina Md Zain</td><td>International Multidisciplinary Conference 2021</td><td>15-Jun-21</td><td><span class="badge b-award">Best Paper Award</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>1</td><td>Analysis of Errors in Constructing Arabic Sentences Among MPU22362 Students, Sultan Idris Shah Polytechnic</td><td>Nur Hidayati Binti Sanusi</td><td>SEMARAK ILMU PUBLISHING — Semarak International Journal of Current Research in Language and Human Studies, Vol. 6, No. 1 (March) 2026</td><td>16 Jan 2026</td><td><span class="badge b-award">The Best Article, Editor's Choice</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>2</td><td>EduGame Arabic Letter Dice: An Innovation for Enhancing Arabic Word-Building Skills</td><td>Nur Hidayati Sanusi; Noorwati Mohd Dawam</td><td>International Creative Innovation Idea Competition 2026</td><td>24 Jan 2026</td><td><span class="badge b-perak">Silver</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>3</td><td>Pengaruh Xenoglossofobia Terhadap Keberkesanan Pembelajaran Bahasa Inggeris dalam Kalangan Pelajar Politeknik Sultan Idris Shah</td><td>Nur Hidayati Sanusi; Mohd Khair bin Nordin@Baharuddin; Mohammad bin Muda</td><td>20th International Conference On Business Studies &amp; Education- JPPTM Jilid 4, Isu 1</td><td>30-31 Mac 2026</td><td><span class="badge b-penulis">Penulis &amp; Pembentang</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>4</td><td>Keberkesanan Pelaksanaan Peningkatan Kualiti Berterusan Terhadap Pencapaian Hasil Pembelajaran DUF10212 Bahasa Arab 1</td><td>Nur Hidayati Sanusi; Mohd Rusdan Hasan</td><td>20th International Conference On Business Studies &amp; Education- JPPTM Jilid 4, Isu 1</td><td>30-31 Mac 2026</td><td><span class="badge b-penulis">Penulis &amp; Pembentang</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>5</td><td>A Correlational Study of Learning Style Preferences in the Subject of Penghayatan Etika dan Peradaban Among Students of Politeknik Sultan Idris Shah</td><td>Nur Hidayati Sanusi; Noorwati Mohd Dawam; Rahimah Halim; Dr. Maryam Bte Badrul Munir</td><td>International TVET Academic and Research Symposium 5.0 (ITARS 5.0) - UTVET Vol.7, No.1 (2026)</td><td>8 April 2026</td><td><span class="badge b-penulis">Penulis &amp; Pembentang</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>6</td><td>Persepsi Pelajar Terhadap Kursus Integriti Dan Anti Rasuah (Kiar) Dalam Membentuk Kesedaran Integriti Di Kalangan Pelajar: Satu Kajian Di Politeknik Sultan Idris Shah</td><td>Mohd Farid Bin Dawam</td><td>International Education Research &amp; Innovation Carnival (INERIC 2026) 12-14 May 2026</td><td>12-14 Mei 2026</td><td><span class="badge b-award">Penulis &amp; Pembentang (Gold Award)</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>7</td><td>Penggunaan Teknologi Maklumat Di Kalangan Pelajar Politeknik Sultan Idris Shah Dalam Kursus Nilai Masyarakat Malaysia</td><td>Mohd Farid Bin Dawam</td><td>International Education Research &amp; Innovation Carnival (INERIC 2026) 12-14 May 2026</td><td>12-14 Mei 2026</td><td><span class="badge b-award">Penulis &amp; Pembentang (Gold Award)</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>8</td><td>AI-Driven Innovation in Resume Tool Development: A Needs-Based Approach for TVET Students</td><td>Noorarizawaty Binti Aris; Harlini Binti Khairuddin; Siti Zaharah Binti Abdul Aziz</td><td>International Conference on Research, Innovation, Sustainability, &amp; Education (iRiseon 2026)</td><td>18-19 April 2026</td><td><span class="badge b-penulis">Penulis &amp; Pembentang</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>9</td><td>Exploring the Reading Attitudes of Diploma Students in Politeknik Sultan Idris Shah Towards English Materials</td><td>Durgai Ravindaran</td><td>Enviropoly 2026 Enviromental &amp; Eco Green Simposium</td><td>11-12 Ogos 2026</td><td><span class="badge b-penulis">Penulis &amp; Pembentang</span></td><td><span class="badge b-politeknik">Politeknik</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>10</td><td>Lecturers' Perceptions of ChatGPT Use in Malaysian Polytechnic ESL Classrooms: An Exploratory Descriptive Study</td><td>Radika Subramaniam</td><td>The 4th International Conference on Modern Languages and Applied Linguistics — International Journal of Humanities, Philosophy and Language (IJHPL)</td><td>29 April 2026</td><td><span class="badge b-penulis">Penulis &amp; Pembentang</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>11</td><td>Shared and Unshared Verb Phrase-Based Bundles Between L2 and L1 Novice, and Expert Academic Writing</td><td>Radika Subramaniam</td><td>The IUP Journal of English Studies</td><td>April-Jun 2026</td><td><span class="badge b-penulis">Penulis</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>12</td><td>High-Performance Work Systems in the Indonesian Context: A Strategic Human Resource Management Literature Review</td><td>Maryam Bte Badrul Munir; Umi Hamidaton Soffian Lee; Nur Hidayati Sanusi; Tahani Badrul Munir</td><td>Creative Economics and Tourism and Halal Ecosystem (CETHE) Vol. 4, No. 2 (2026)</td><td>18 Julai 2026</td><td><span class="badge b-penulis">Penulis</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>13</td><td>Tahap Penguasaan Bahasa Inggeris dan Hubungannya Terhadap Pemahaman Konsep Alam Sekitar dalam Kalangan Pelajar DAS, Politeknik Sultan Idris Shah</td><td>Mohd Khair bin Nordin@Baharuddin; Nur Hidayati Sanusi</td><td>Enviropoly 2026 Enviromental &amp; Eco Green Simposium</td><td>11-12 Ogos 2026</td><td><span class="badge b-penulis">Penulis &amp; Pembentang</span></td><td><span class="badge b-politeknik">Politeknik</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>14</td><td>Hubungan Antara Tahap Keyakinan Diri Pelajar dengan Kebimbangan dalam Menggunakan Bahasa Arab di Politeknik Sultan Idris Shah</td><td>Nur Hidayati Sanusi; Mohd Rusdan Hasan; Mohd Farid Dawam</td><td>ICWET2026, PKK — Politeknik Kota Kinabalu &amp; Politeknik Medan</td><td>12-13 Ogos 2026</td><td><span class="badge b-penulis">Penulis &amp; Pembentang</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>15</td><td>The Relationship Between Corruption Knowledge and Perceptions of "Duit Kopi" Among Polytechnic Students</td><td>Nur Hidayati Sanusi; Mohd Husni Abd Halid; Asma' Ibrahim</td><td>ITEC2026 — Politeknik Kota Bharu &amp; Politeknik Medan</td><td>1-2 Sept 2026</td><td><span class="badge b-penulis">Penulis &amp; Pembentang</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Education</td></tr>
+          <tr><td>16</td><td>Factors Affecting Concentration and Learning Focus Among Junior-Dip PSIS</td><td>Mohd Fadzu Bin Zulkeflee; Mohd Rusdan Bin Hasan</td><td>International TVET Academic and Research Symposium 2026 (ITARS 5.0)</td><td>2026</td><td><span class="badge b-penulis">Penulis</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Social Sciences</td></tr>
+          <tr><td>17</td><td>Study on Anxiety Levels and Influencing Factors for Final Semester Students of the Diploma in Electronic Engineering (Computer) at PSIS</td><td>Mohd Fadzu Bin Zulkeflee; Noraisah Binti Ismail</td><td>Innovation, Technology, Engineering and Commercialization 2026 (PITEC) 2026</td><td>2026</td><td><span class="badge b-penulis">Penulis</span></td><td><span class="badge b-antarabangsa">Antarabangsa</span></td><td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td><td>Social Sciences</td></tr>
+        </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== INOVASI ===== -->
+    <div class="page" id="page-inovasi">
+      <p class="section-sub">Rekod projek inovasi dan pencapaian pertandingan oleh pensyarah dan pelajar Jabatan Pengajian Am, PSIS</p>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="label">Jumlah Projek Inovasi</div>
+          <div class="value">4</div>
+        </div>
+        <div class="kpi-card gold">
+          <div class="label">Projek Menang Anugerah</div>
+          <div class="value">3</div>
+          <div class="sub">Emas, Perak &amp; Tempat Pertama</div>
+        </div>
+        <div class="kpi-card teal">
+          <div class="label">Peringkat Antarabangsa</div>
+          <div class="value">2</div>
+          <div class="sub">ICIIC 2026 &amp; lain-lain</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3>Pencapaian / Anugerah</h3>
+          <div class="bar-chart">
+            <div class="bar-row"><span class="bar-label">Emas</span><div class="bar-wrap"><div class="bar-fill gold" style="width:25%">1</div></div></div>
+            <div class="bar-row"><span class="bar-label">Perak</span><div class="bar-wrap"><div class="bar-fill" style="width:25%">1</div></div></div>
+            <div class="bar-row"><span class="bar-label">Tempat Pertama</span><div class="bar-wrap"><div class="bar-fill teal" style="width:25%">1</div></div></div>
+            <div class="bar-row"><span class="bar-label">Perak (belum)</span><div class="bar-wrap"><div class="bar-fill" style="width:25%">1</div></div></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Peringkat Pertandingan</h3>
+          <div class="bar-chart">
+            <div class="bar-row"><span class="bar-label">Antarabangsa</span><div class="bar-wrap"><div class="bar-fill" style="width:50%">2</div></div></div>
+            <div class="bar-row"><span class="bar-label">Jabatan</span><div class="bar-wrap"><div class="bar-fill gold" style="width:25%">1</div></div></div>
+            <div class="bar-row"><span class="bar-label">Kebangsaan</span><div class="bar-wrap"><div class="bar-fill teal" style="width:25%">1</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Senarai Projek Inovasi</h3>
+          <span style="font-size:11px;color:#57606a">4 rekod</span>
+        </div>
+        <div class="table-scroll">
+        <table>
+          <tr>
+            <th>Bil</th>
+            <th style="min-width:200px">Nama Projek / Inovasi</th>
+            <th style="min-width:180px">Pensyarah PSIS</th>
+            <th style="min-width:160px">Nama Pertandingan</th>
+            <th>Anjuran</th>
+            <th>Tempat</th>
+            <th>Tarikh</th>
+            <th>Pencapaian</th>
+            <th>Peringkat</th>
+            <th>Kategori</th>
+            <th>Bidang</th>
+          </tr>
+          <tr>
+            <td>CTH</td>
+            <td>Poultry Incubator Inspection System</td>
+            <td>Muhamad Aiman Aidil Bin Idris</td>
+            <td>National Innovation and Invention Competition through Exhibition 2019 (iCompEx'19)</td>
+            <td>Politeknik Sultan Abdul Halim Mu'adzam Shah (POLIMAS)</td>
+            <td>Dewan Wawasan, Jitra, Kedah</td>
+            <td>19-21 Mac 2019</td>
+            <td><span class="badge b-gangsa">Gangsa</span></td>
+            <td><span class="badge b-kebangsaan">Kebangsaan</span></td>
+            <td><span class="badge b-proj-pelajar">Projek Pelajar</span></td>
+            <td>ICT</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>Arabic Dice</td>
+            <td>Nur Hidayati Binti Sanusi; Noorwati Binti Mohd Dawam</td>
+            <td>International Creative &amp; Innovative Idea Competition (ICIIC) 2026</td>
+            <td>MNNF Network</td>
+            <td>Atas Talian</td>
+            <td>24 Januari 2026</td>
+            <td><span class="badge b-perak">Perak</span></td>
+            <td><span class="badge b-antarabangsa">Antarabangsa</span></td>
+            <td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td>
+            <td>Education</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Fun With Al-Alwan</td>
+            <td>Nur Hidayati Binti Sanusi</td>
+            <td>International Creative &amp; Innovative Idea Competition (ICIIC) 2026</td>
+            <td>MNNF Network</td>
+            <td>Atas Talian</td>
+            <td>24 Januari 2026</td>
+            <td><span class="badge b-emas">Emas</span></td>
+            <td><span class="badge b-antarabangsa">Antarabangsa</span></td>
+            <td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td>
+            <td>Education</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>From Manual to Intelligent: A Lean Transformation of Resume Assessment in TVET</td>
+            <td>Noorarizawaty Binti Aris; Harlini Binti Khairuddin; Siti Zaharah Binti Abdul Aziz</td>
+            <td>Pertandingan Lean Management PSIS 2026</td>
+            <td>Politeknik Sultan Idris Shah</td>
+            <td>Politeknik Sultan Idris Shah</td>
+            <td>8 April 2026</td>
+            <td><span class="badge b-pertama">Tempat Pertama</span></td>
+            <td><span class="badge b-jabatan">Jabatan</span></td>
+            <td><span class="badge b-proj-pensyarah">Projek Pensyarah</span></td>
+            <td>Education</td>
+          </tr>
+        </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BORANG ===== -->
+    <div class="page" id="page-borang">
+      <p class="section-sub">Isi borang di bawah untuk merekodkan data penyelidikan atau inovasi baharu. Pilih tab yang sesuai, lengkapkan semua field, kemudian klik <strong>Hantar</strong>.</p>
+
+      <!-- Tab toggle -->
+      <div class="form-tabs">
+        <button class="form-tab active" onclick="switchTab('penyelidikan-form', this)">🔬 Borang Penyelidikan</button>
+        <button class="form-tab" onclick="switchTab('inovasi-form', this)">💡 Borang Inovasi</button>
+      </div>
+
+      <!-- ===== BORANG PENYELIDIKAN ===== -->
+      <div class="form-panel active" id="penyelidikan-form">
+        <div class="form-wrap">
+          <div class="form-header"><h3>🔬 Borang Penyelidikan / Penerbitan</h3><span>Semua field bertanda * wajib diisi</span></div>
+          <div class="form-body">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Tajuk Kajian / Penyelidikan *</label>
+                <input type="text" id="p-tajuk" placeholder="Masukkan tajuk lengkap kajian..." />
+              </div>
+              <div class="form-group">
+                <label>Nama Penyelidik *</label>
+                <input type="text" id="p-penyelidik" placeholder="Contoh: Nur Hidayati Binti Sanusi" />
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Nama Persidangan / Seminar *</label>
+                <input type="text" id="p-persidangan" placeholder="Contoh: ICET 2026" />
+              </div>
+              <div class="form-group">
+                <label>Anjuran</label>
+                <input type="text" id="p-anjuran" placeholder="Contoh: MNNF Network" />
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Tempat</label>
+                <select id="p-tempat">
+                  <option value="">-- Pilih Tempat --</option>
+                  <option>Atas Talian</option>
+                  <option>Dalam Negara</option>
+                  <option>Luar Negara</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Tarikh *</label>
+                <input type="date" id="p-tarikh" />
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Pencapaian *</label>
+                <select id="p-pencapaian">
+                  <option value="">-- Pilih Pencapaian --</option>
+                  <option>Penulis &amp; Pembentang</option>
+                  <option>Penulis</option>
+                  <option>Pembentang</option>
+                  <option>Best Paper Award</option>
+                  <option>The Best Article</option>
+                  <option>Gold Award</option>
+                  <option>Silver Award</option>
+                  <option>Bronze Award</option>
+                  <option>Lain-lain</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Peringkat *</label>
+                <select id="p-peringkat">
+                  <option value="">-- Pilih Peringkat --</option>
+                  <option>Antarabangsa</option>
+                  <option>Kebangsaan</option>
+                  <option>Politeknik</option>
+                  <option>Jabatan</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Kategori *</label>
+                <select id="p-kategori">
+                  <option value="">-- Pilih Kategori --</option>
+                  <option>Projek Pensyarah</option>
+                  <option>Projek Pelajar</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Bidang *</label>
+                <select id="p-bidang">
+                  <option value="">-- Pilih Bidang --</option>
+                  <option>Education</option>
+                  <option>Social Sciences</option>
+                  <option>ICT</option>
+                  <option>Business</option>
+                  <option>Engineering</option>
+                  <option>Lain-lain</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Nama Jurnal / Penerbit</label>
+              <input type="text" id="p-jurnal" placeholder="Contoh: Asian Journal of Education" />
+            </div>
+            <div class="form-group">
+              <label>DOI / URL (jika ada)</label>
+              <input type="text" id="p-doi" placeholder="Contoh: 10.1234/jet.2026.001" />
+            </div>
+            <div class="form-group">
+              <label>Catatan Tambahan</label>
+              <textarea id="p-catatan" rows="3" placeholder="Maklumat tambahan jika ada..."></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="btn-reset" onclick="resetForm('p')">🗑 Reset</button>
+              <button class="btn-submit" onclick="submitForm('penyelidikan')">✅ Hantar Rekod Penyelidikan</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== BORANG INOVASI ===== -->
+      <div class="form-panel" id="inovasi-form">
+        <div class="form-wrap">
+          <div class="form-header"><h3>💡 Borang Inovasi / Pertandingan</h3><span>Semua field bertanda * wajib diisi</span></div>
+          <div class="form-body">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Nama Projek / Inovasi *</label>
+                <input type="text" id="i-projek" placeholder="Contoh: Arabic Dice" />
+              </div>
+              <div class="form-group">
+                <label>Nama Pensyarah PSIS *</label>
+                <input type="text" id="i-pensyarah" placeholder="Contoh: Nur Hidayati Binti Sanusi" />
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Nama Pelajar (jika ada)</label>
+                <input type="text" id="i-pelajar" placeholder="Nama pelajar yang terlibat" />
+              </div>
+              <div class="form-group">
+                <label>Nama Pertandingan *</label>
+                <input type="text" id="i-pertandingan" placeholder="Contoh: ICIIC 2026" />
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Anjuran</label>
+                <input type="text" id="i-anjuran" placeholder="Contoh: MNNF Network" />
+              </div>
+              <div class="form-group">
+                <label>Tempat</label>
+                <select id="i-tempat">
+                  <option value="">-- Pilih Tempat --</option>
+                  <option>Atas Talian</option>
+                  <option>Dalam Negara</option>
+                  <option>Luar Negara</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Tarikh *</label>
+                <input type="date" id="i-tarikh" />
+              </div>
+              <div class="form-group">
+                <label>Pencapaian / Anugerah *</label>
+                <select id="i-pencapaian">
+                  <option value="">-- Pilih Pencapaian --</option>
+                  <option>Emas</option>
+                  <option>Perak</option>
+                  <option>Gangsa</option>
+                  <option>Tempat Pertama</option>
+                  <option>Tempat Kedua</option>
+                  <option>Tempat Ketiga</option>
+                  <option>Best Innovation Award</option>
+                  <option>Penyertaan Sahaja</option>
+                  <option>Lain-lain</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Peringkat *</label>
+                <select id="i-peringkat">
+                  <option value="">-- Pilih Peringkat --</option>
+                  <option>Antarabangsa</option>
+                  <option>Kebangsaan</option>
+                  <option>Politeknik</option>
+                  <option>Jabatan</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Kategori *</label>
+                <select id="i-kategori">
+                  <option value="">-- Pilih Kategori --</option>
+                  <option>Projek Pensyarah</option>
+                  <option>Projek Pelajar</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Bidang *</label>
+                <select id="i-bidang">
+                  <option value="">-- Pilih Bidang --</option>
+                  <option>Education</option>
+                  <option>ICT</option>
+                  <option>Social Sciences</option>
+                  <option>Business</option>
+                  <option>Engineering</option>
+                  <option>Lain-lain</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Status IP / Hak Cipta</label>
+                <select id="i-ip">
+                  <option value="">-- Pilih Status --</option>
+                  <option>Tiada</option>
+                  <option>Hak Cipta (Copyright)</option>
+                  <option>Paten (Patent)</option>
+                  <option>Tanda Niaga (Trademark)</option>
+                  <option>Dalam Proses</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>No. Copyright (jika ada)</label>
+              <input type="text" id="i-copyright" placeholder="Contoh: CRLY2026W03005" />
+            </div>
+            <div class="form-group">
+              <label>Catatan Tambahan</label>
+              <textarea id="i-catatan" rows="3" placeholder="Maklumat tambahan jika ada..."></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="btn-reset" onclick="resetForm('i')">🗑 Reset</button>
+              <button class="btn-submit btn-submit-gold" onclick="submitForm('inovasi')">✅ Hantar Rekod Inovasi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success message -->
+      <div class="form-success" id="form-success">
+        <div class="form-success-icon">✅</div>
+        <h3>Rekod Berjaya Dihantar!</h3>
+        <p id="form-success-msg">Data anda telah direkodkan. Sila hubungi Penyelaras UPIK untuk kemaskini ke Google Sheets.</p>
+        <button class="btn-submit" style="margin-top:16px;width:auto;padding:10px 24px" onclick="closeSuccess()">Hantar Rekod Lain</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ===== USERS =====
+  // Tambah / buang pengguna di sini
+  // Format: { user: 'nama', pass: 'kataLaluan', role: 'admin' atau 'viewer' }
+  const USERS = [
+    { user: 'admin',     pass: 'upikjpa2026',  role: 'admin',     label: 'Penyelaras UPIK' },
+    { user: 'pensyarah', pass: 'psis2026',      role: 'viewer',    label: 'Pensyarah'       }
+  ];
+
+  function quickLogin(user, pass) {
+    document.getElementById('login-user').value = user;
+    document.getElementById('login-pass').value = pass;
+    doLogin();
+  }
+
+  function doLogin() {
+    const u = document.getElementById('login-user').value.trim().toLowerCase();
+    const p = document.getElementById('login-pass').value.trim();
+    const match = USERS.find(x => x.user === u && x.pass === p);
+    if (match) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('sidebar-username').textContent = match.user.charAt(0).toUpperCase() + match.user.slice(1);
+      document.getElementById('sidebar-role').textContent = match.label;
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+    }
+  }
+
+  function doLogout() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-error').style.display = 'none';
+  }
+
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.form-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+    document.getElementById('form-success').style.display = 'none';
+  }
+
+  function resetForm(prefix) {
+    const fields = prefix === 'p'
+      ? ['tajuk','penyelidik','persidangan','anjuran','tempat','tarikh','pencapaian','peringkat','kategori','bidang','jurnal','doi','catatan']
+      : ['projek','pensyarah','pelajar','pertandingan','anjuran','tempat','tarikh','pencapaian','peringkat','kategori','bidang','ip','copyright','catatan'];
+    fields.forEach(f => {
+      const el = document.getElementById(prefix + '-' + f);
+      if (el) { el.value = ''; el.style.borderColor = '#e5e7eb'; }
+    });
+  }
+
+  function submitForm(type) {
+    const required = type === 'penyelidikan'
+      ? ['p-tajuk','p-penyelidik','p-persidangan','p-tarikh','p-pencapaian','p-peringkat','p-kategori','p-bidang']
+      : ['i-projek','i-pensyarah','i-pertandingan','i-tarikh','i-pencapaian','i-peringkat','i-kategori','i-bidang'];
+    let missing = false;
+    required.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el || !el.value.trim()) { el.style.borderColor = '#ef4444'; missing = true; }
+      else { el.style.borderColor = '#e5e7eb'; }
+    });
+    if (missing) { alert('Sila lengkapkan semua field yang bertanda *.'); return; }
+    const name = type === 'penyelidikan'
+      ? document.getElementById('p-tajuk').value
+      : document.getElementById('i-projek').value;
+    document.getElementById('form-success-msg').textContent =
+      'Rekod "' + name + '" telah direkodkan. Sila hubungi Penyelaras UPIK untuk kemaskini ke Google Sheets.';
+    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('form-success').style.display = 'block';
+    resetForm(type === 'penyelidikan' ? 'p' : 'i');
+  }
+
+  function closeSuccess() {
+    document.getElementById('form-success').style.display = 'none';
+    document.getElementById('penyelidikan-form').classList.add('active');
+    document.querySelectorAll('.form-tab').forEach((b,i) => b.classList.toggle('active', i===0));
+  }
+
+  function showPage(id, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    el.classList.add('active');
+    const titles = { overview:'Overview — UPIK Dashboard', penyelidikan:'Penyelidikan & Penerbitan', inovasi:'Inovasi & Pertandingan', borang:'Hantar Data Baharu' };
+    document.getElementById('page-title').textContent = titles[id];
+  }
+</script>
+</body>
+</html>
